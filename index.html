@@ -3,73 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT File Upload</title>
+    <title>Custom ChatGPT with File Upload and Auto Reply</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .input-field {
+            margin-bottom: 20px;
+        }
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+        }
+    </style>
 </head>
 <body>
-    <h1>ChatGPT File Upload and Prompt</h1>
 
-    <!-- Text area for the prompt -->
-    <textarea id="prompt" placeholder="Enter your prompt here"></textarea>
+<div class="container">
+    <h2>Custom ChatGPT with File Upload and Auto Reply</h2>
 
-    <!-- File upload input -->
-    <input type="file" id="fileUpload" />
+    <!-- Textbox to input the custom prompt -->
+    <div class="input-field">
+        <label for="prompt">Enter your custom prompt for ChatGPT:</label><br>
+        <textarea id="prompt" placeholder="Type your custom prompt here..."></textarea>
+    </div>
 
-    <!-- Submit button -->
-    <button onclick="submitPrompt()">Submit</button>
+    <!-- File Upload Form -->
+    <div class="input-field">
+        <label for="file-upload">Upload a File (optional):</label><br>
+        <input type="file" id="file-upload">
+    </div>
 
-    <!-- Response area -->
-    <h2>Response</h2>
-    <pre id="response"></pre>
+    <!-- Option to specify specific messages to send -->
+    <div class="input-field">
+        <label for="custom-message">Specify incoming message to trigger auto-reply (optional):</label><br>
+        <input type="text" id="custom-message" placeholder="Enter specific incoming message">
+    </div>
 
-    <script>
-        // Example function to handle file uploads and send prompts
-        function submitPrompt() {
-            const prompt = document.getElementById("prompt").value;
-            const fileInput = document.getElementById("fileUpload");
+    <!-- Button to send the configuration -->
+    <button onclick="saveConfiguration()">Save Configuration</button>
+
+    <!-- Area to display the response -->
+    <div id="response-container" class="response">
+        <p>Configuration saved! Incoming messages will be processed accordingly.</p>
+    </div>
+</div>
+
+<script>
+    function saveConfiguration() {
+        const prompt = document.getElementById('prompt').value;
+        const customMessage = document.getElementById('custom-message').value;
+        const fileInput = document.getElementById('file-upload');
+
+        // If file upload is needed, handle the file here (e.g., send it to the server)
+        if (fileInput.files.length > 0) {
             const file = fileInput.files[0];
-
-            // Read the file contents (if any)
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const fileContent = e.target.result;
-                    // Send the file content and prompt to the server or OpenAI API
-                    sendToChatGPT(prompt, fileContent);
-                };
-                reader.readAsText(file);
-            } else {
-                // No file, just send the prompt
-                sendToChatGPT(prompt);
-            }
+            console.log('File uploaded:', file.name);
+            // Further logic to handle file (if required)
         }
 
-        // Function to send prompt and file content to OpenAI API
-        function sendToChatGPT(prompt, fileContent = null) {
-            const apiKey = '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'; // Replace with your OpenAI API key
-            const url = 'https://api.openai.com/v1/completions'; // Example for OpenAI API
+        // Save the custom prompt and message
+        console.log('Custom Prompt:', prompt);
+        console.log('Custom Message:', customMessage);
 
-            const requestData = {
-                model: 'text-davinci-003',  // Adjust the model as needed
-                prompt: prompt + (fileContent ? `\nFile content: ${fileContent}` : ""),
-                max_tokens: 200,
-            };
+        // You can send this data to the server via AJAX if needed, for example:
+        /*
+        fetch('your-server-endpoint.php', {
+            method: 'POST',
+            body: JSON.stringify({
+                prompt: prompt,
+                customMessage: customMessage
+            })
+        });
+        */
+    }
+</script>
 
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${apiKey}`
-                },
-                body: JSON.stringify(requestData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("response").innerText = data.choices[0].text;
-            })
-            .catch(error => {
-                document.getElementById("response").innerText = "Error: " + error.message;
-            });
-        }
-    </script>
 </body>
 </html>
