@@ -3,47 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT Auto-Reply System</title>
+    <title>ChatGPT File Upload</title>
 </head>
 <body>
+    <h1>ChatGPT File Upload and Prompt</h1>
 
-<h2>ChatGPT Auto-Reply System</h2>
+    <!-- Text area for the prompt -->
+    <textarea id="prompt" placeholder="Enter your prompt here"></textarea>
 
-<!-- File Upload Form -->
-<form id="chat-form" enctype="multipart/form-data">
-    <label for="file-upload">Upload a File:</label><br>
-    <input type="file" id="file-upload" name="file"><br><br>
+    <!-- File upload input -->
+    <input type="file" id="fileUpload" />
 
-    <label for="prompt">Enter your prompt:</label><br>
-    <textarea id="prompt" name="prompt" placeholder="Type your message here..."></textarea><br><br>
+    <!-- Submit button -->
+    <button onclick="submitPrompt()">Submit</button>
 
-    <button type="button" onclick="sendMessage()">Send Message</button>
-</form>
+    <!-- Response area -->
+    <h2>Response</h2>
+    <pre id="response"></pre>
 
-<!-- Area to display the AI response -->
-<div id="response-container">
-    <p>Response will be shown here.</p>
-</div>
+    <script>
+        // Example function to handle file uploads and send prompts
+        function submitPrompt() {
+            const prompt = document.getElementById("prompt").value;
+            const fileInput = document.getElementById("fileUpload");
+            const file = fileInput.files[0];
 
-<script>
-    // Function to send data to PHP script and get ChatGPT response
-    async function sendMessage() {
-        const form = document.getElementById('chat-form');
-        const formData = new FormData(form);
-
-        try {
-            const response = await fetch('message.php', {
-                method: 'POST',
-                body: formData
-            });
-
-            const data = await response.json();
-            document.getElementById('response-container').innerHTML = `<p>${data.reply}</p>`;
-        } catch (error) {
-            document.getElementById('response-container').innerHTML = `<p>Error: ${error.message}</p>`;
+            // Read the file contents (if any)
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const fileContent = e.target.result;
+                    // Send the file content and prompt to the server or OpenAI API
+                    sendToChatGPT(prompt, fileContent);
+                };
+                reader.readAsText(file);
+            } else {
+                // No file, just send the prompt
+                sendToChatGPT(prompt);
+            }
         }
-    }
-</script>
 
+        // Function to send prompt and file content to OpenAI API
+        function sendToChatGPT(prompt, fileContent = null) {
+            const apiKey = 'YOUR_API_KEY_HERE'; // Replace with your OpenAI API key
+            const url = 'https://api.openai.com/v1/completions'; // Example for OpenAI API
+
+            const requestData = {
+                model: 'text-davinci-003',  // Adjust the model as needed
+                prompt: prompt + (fileContent ? `\nFile content: ${fileContent}` : ""),
+                max_tokens: 200,
+            };
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("response").innerText = data.choices[0].text;
+            })
+            .catch(error => {
+                document.getElementById("response").innerText = "Error: " + error.message;
+            });
+        }
+    </script>
 </body>
 </html>
