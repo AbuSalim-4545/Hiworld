@@ -1,64 +1,55 @@
 <?php
-// This PHP script handles the incoming form data and interacts with OpenAI's API
+// Get incoming message data from WhatAuto
+$app_name   = $_POST["app"];
+$sender     = $_POST["sender"];
+$message    = $_POST["message"];
+$phone      = $_POST["phone"];
+$group_name = $_POST["group_name"];
 
-// Get form data from POST request
-$prompt = $_POST["prompt"] ?? '';
+// Optionally, check if this is a custom message trigger (based on configuration)
+$custom_message = "your_custom_message"; // You can dynamically configure this
 
-// Handle file upload if present
-if (isset($_FILES['file'])) {
-    $file_name = $_FILES['file']['name'];
-    $file_tmp = $_FILES['file']['tmp_name'];
-    
-    // Ensure the uploads directory exists
-    if (!is_dir("uploads")) {
-        mkdir("uploads", 0777, true);
-    }
-
-    // Move the uploaded file to the 'uploads' directory
-    move_uploaded_file($file_tmp, "uploads/" . basename($file_name));
-}
-
-// Include current time in the prompt
-$current_time = date('Y-m-d H:i:s');
-$prompt_with_time = "At $current_time, the user submitted: $prompt";
-
-// OpenAI API request
-$api_key = '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';  // Replace with your actual API key
-
-$data = [
-    "model" => "gpt-4",
-    "messages" => [
-        ["role" => "user", "content" => $prompt_with_time]
-    ],
-    "temperature" => 0.7
-];
-
-$curl = curl_init();
-curl_setopt_array($curl, [
-    CURLOPT_URL => "https://api.openai.com/v1/chat/completions",
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST => true,
-    CURLOPT_POSTFIELDS => json_encode($data),
-    CURLOPT_HTTPHEADER => [
-        "Content-Type: application/json",
-        "Authorization: Bearer $api_key"
-    ]
-]);
-
-$response = curl_exec($curl);
-
-// Check for cURL errors
-if (curl_errno($curl)) {
-    echo 'Error:' . curl_error($curl);
+if ($message === $custom_message) {
+    // If it matches a custom message, proceed with ChatGPT response logic
+    $response = generateChatGPTResponse($message);
 } else {
-    // Decode API response
-    $response_data = json_decode($response, true);
-    $chatgpt_reply = $response_data['choices'][0]['message']['content'] ?? 'No response from ChatGPT';
-    
-    // Return a custom reply in JSON format
-    $result = array("reply" => $chatgpt_reply);
-    echo json_encode($result);
+    // Fallback reply
+    $response = array("reply" => "Hello $sender, we received your message: $message.");
 }
 
-curl_close($curl);
+echo json_encode($response);
+
+// Function to interact with the OpenAI API and get the response
+function generateChatGPTResponse($message) {
+    $apiKey = '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';  // Replace with your actual OpenAI API key
+
+    // Create request body
+    $data = array(
+        "model" => "gpt-4",
+        "messages" => array(
+            array("role" => "user", "content" => $message)
+        ),
+        "temperature" => 0.7
+    );
+
+    // Initialize cURL
+    $ch = curl_init('https://api.openai.com/v1/chat/completions');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $apiKey
+    ));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+    // Execute and fetch the result
+    $result = curl_exec($ch);
+    curl_close($ch);
+
+    // Process and return the response
+    $resultArray = json_decode($result, true);
+    $reply = $resultArray['choices'][0]['message']['content'];
+
+    return array("reply" => $reply);
+}
 ?>
