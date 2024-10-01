@@ -22,6 +22,10 @@ if (isset($_FILES['file'])) {
 $current_time = date('Y-m-d H:i:s');
 $prompt_with_time = "At $current_time, the user submitted: $prompt";
 
+// OpenAI API request
+$api_key = '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';  // Replace with your actual API key
+
+
 $data = [
     "model" => "gpt-4",
     "messages" => [
