@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom ChatGPT with File Upload and Auto Reply</title>
+    <title>ChatGPT Integration</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            padding: 20px;
         }
         .container {
-            max-width: 700px;
+            max-width: 800px;
             margin: 0 auto;
         }
-        .input-field {
-            margin-bottom: 20px;
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
         }
-        textarea, input[type="text"] {
+        input, select {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            margin-bottom: 10px;
         }
         button {
             padding: 10px 20px;
@@ -29,9 +29,6 @@
             color: white;
             border: none;
             cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
         }
         .response {
             margin-top: 20px;
@@ -44,62 +41,78 @@
 <body>
 
 <div class="container">
-    <h2>Custom ChatGPT with File Upload and Auto Reply</h2>
+    <h2>ChatGPT Customizable API</h2>
+    
+    <!-- Upload File -->
+    <label for="file-upload">Upload a file (optional):</label>
+    <input type="file" id="file-upload">
 
-    <!-- Textbox to input the custom prompt -->
-    <div class="input-field">
-        <label for="prompt">Enter your custom prompt for ChatGPT:</label><br>
-        <textarea id="prompt" placeholder="Type your custom prompt here..."></textarea>
-    </div>
+    <!-- Prompt Input -->
+    <label for="prompt">Enter your prompt:</label>
+    <textarea id="prompt" placeholder="Type your message here..."></textarea>
 
-    <!-- File Upload Form -->
-    <div class="input-field">
-        <label for="file-upload">Upload a File (optional):</label><br>
-        <input type="file" id="file-upload">
-    </div>
+    <!-- Customization Options -->
+    <label for="temperature">Temperature:</label>
+    <select id="temperature">
+        <option value="0.7">0.7 (Default)</option>
+        <option value="0.3">0.3 (Conservative)</option>
+        <option value="1.0">1.0 (Creative)</option>
+    </select>
 
-    <!-- Option to specify specific messages to send -->
-    <div class="input-field">
-        <label for="custom-message">Specify incoming message to trigger auto-reply (optional):</label><br>
-        <input type="text" id="custom-message" placeholder="Enter specific incoming message">
-    </div>
+    <label for="model">Model:</label>
+    <select id="model">
+        <option value="gpt-4">gpt-4</option>
+        <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+    </select>
 
-    <!-- Button to send the configuration -->
-    <button onclick="saveConfiguration()">Save Configuration</button>
+    <!-- Send Message Button -->
+    <button onclick="sendMessage()">Send Message</button>
 
-    <!-- Area to display the response -->
+    <!-- ChatGPT Response Area -->
     <div id="response-container" class="response">
-        <p>Configuration saved! Incoming messages will be processed accordingly.</p>
+        <p>Response will appear here.</p>
     </div>
 </div>
 
 <script>
-    function saveConfiguration() {
+    async function sendMessage() {
         const prompt = document.getElementById('prompt').value;
-        const customMessage = document.getElementById('custom-message').value;
+        const temperature = document.getElementById('temperature').value;
+        const model = document.getElementById('model').value;
         const fileInput = document.getElementById('file-upload');
 
-        // If file upload is needed, handle the file here (e.g., send it to the server)
-        if (fileInput.files.length > 0) {
-            const file = fileInput.files[0];
-            console.log('File uploaded:', file.name);
-            // Further logic to handle file (if required)
+        if (!prompt) {
+            alert('Please enter a prompt.');
+            return;
         }
 
-        // Save the custom prompt and message
-        console.log('Custom Prompt:', prompt);
-        console.log('Custom Message:', customMessage);
+        let fileData = null;
+        if (fileInput.files.length > 0) {
+            fileData = fileInput.files[0];
+        }
 
-        // You can send this data to the server via AJAX if needed, for example:
-        /*
-        fetch('your-server-endpoint.php', {
-            method: 'POST',
-            body: JSON.stringify({
-                prompt: prompt,
-                customMessage: customMessage
-            })
-        });
-        */
+        // Create the request body for OpenAI API
+        const requestBody = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": parseFloat(temperature)
+        };
+
+        try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer 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'  // Replace with your OpenAI API key
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            const data = await response.json();
+            document.getElementById('response-container').innerHTML = `<p>${data.choices[0].message.content}</p>`;
+        } catch (error) {
+            document.getElementById('response-container').innerHTML = `<p>Error: ${error.message}</p>`;
+        }
     }
 </script>
 
